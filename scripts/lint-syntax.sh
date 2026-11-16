@@ -10,7 +10,12 @@
 #   0  すべての対象が構文上妥当で、必要な検査を実施できた
 #   1  構文エラーがある、または必要な検査ツールが無く検証できなかった
 #
- 空配列の扱い
+# Ruby の文字コード
+# ロケール（LANG など）が未設定の環境では、Ruby はスクリプトと読み込むファイルを
+# US-ASCII として扱い、日本語を含むインラインスクリプトが構文エラーになる。
+# マジックコメントでスクリプトを、-E UTF-8 で読み込むファイルを UTF-8 に固定する。
+#
+# 空配列の扱い
 # macOS の bash は 3.2 で、set -u のもとでは空配列の展開
 # "${arr[@]}" と "${arr[*]}" が未定義変数エラーになる。
 # 要素数の参照 ${#arr[@]} は安全。
@@ -159,7 +164,7 @@ else
   for f in "${yaml_files[@]}"; do
     case "$yaml_cmd" in
       python3) ok_cmd=(python3 -c "import yaml,sys; yaml.safe_load(open(sys.argv[1], encoding='utf-8'))" "$f") ;;
-      ruby)    ok_cmd=(ruby -ryaml -e 'YAML.load_file(ARGV[0])' "$f") ;;
+      ruby)    ok_cmd=(ruby -E UTF-8 -ryaml -e 'YAML.load_file(ARGV[0])' "$f") ;;
     esac
     if "${ok_cmd[@]}" 2>/tmp/lint-yaml-err; then
       printf '  OK   %s\n' "$f"
@@ -199,7 +204,7 @@ for k in ('disallowed-tools','allowed-tools'):
     v=d.get(k)
     if v is not None and not isinstance(v,(list,str)): raise SystemExit(f'{k} はリストか文字列である必要があります')
 " "$f") ;;
-      ruby)    fm_cmd=(ruby -ryaml -e '
+      ruby)    fm_cmd=(ruby -E UTF-8 -ryaml -e '# encoding: utf-8
 src = File.read(ARGV[0])
 fm = src[/\A---\n(.*?)\n---\n/m, 1]
 abort "frontmatter が見つかりません" if fm.nil?

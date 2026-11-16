@@ -94,7 +94,9 @@ for t in targets:
 sys.exit(1 if failed else 0)
 PY
 else
-  ruby - "$spec_file" "${targets[@]}" <<'RB'
+  ruby -E UTF-8 - "$spec_file" "${targets[@]}" <<'RB'
+# encoding: utf-8
+# ロケール未設定の環境でも UTF-8 として解釈させる（-E UTF-8 は読み込むファイル用）。
 require 'yaml'
 
 spec_path, *targets = ARGV
